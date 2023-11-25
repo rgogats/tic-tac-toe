@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+    <h1>Tic-Tac-Toe</h1>
+    <form>
+        <label for="size">Grid size (max. 10)</label>
+        <input type="number" name="size" value=3 id="size" min="3" max="10">
+        <label for="rounds">No. of rounds >> DOES NOT WORK</label>
+        <input type="number" name="rounds" value=3 id="rounds" min="3" max="10">
+        <button type="button" id="start">Start game</button>
+    </form>
+    <br>
+    <div class="gameboard"></div>
     <script src="./app.js"></script>
 </body>
 </html>

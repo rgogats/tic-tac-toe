@@ -1,8 +1,6 @@
-// Use module pattern - encapsulation, closure, factory functions
-
-// The Gameboard represents the 3x3 standard grid for tic tac toe
+// The Gameboard represents the grid for tic-tac-toe
 // The Cell represents each square on the grid
-// Gameboard.markCell is base method which moves the game forward
+// The GameController handles game logic and operations - players, turns, win conditions, score
 
 // Gameboard - grid object for gameplay, variable cells but must be equal height and width
 const Gameboard = (size) => {
@@ -18,9 +16,20 @@ const Gameboard = (size) => {
         }
     }
 
-    // getBoard - for UI version
     const getBoard = () => board;
-
+    // print board values in console
+    const printBoardInConsole = () => {
+        const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()))
+        console.log('printed board', boardWithCellValues);
+    };
+    const clearBoard = () => {
+        for(let i = 0; i < rows; i++) {
+            board[i] = [];
+            for(let j = 0; j < columns; j++) {
+                board[i].push(Cell());
+            }
+        }
+    }
     const checkStalemate = () => {
         for(let i = 0; i < board.length; i++) {
             for(let j = 0; j < board[i].length; j++) {
@@ -31,39 +40,34 @@ const Gameboard = (size) => {
         }
         return true;
     };
-
-    // markCell - determine grid cell and mark with player symbol
     const markCell = (player, row, column) => {
         const selectedCell = board[row][column];
-        console.log('selectedCell', selectedCell.getValue(), 'player', player);
-
-        return (selectedCell.getValue() === '' ? selectedCell.addMark(player) : ('unavailable', console.log('Please select an available cell'))); 
+        const result = selectedCell.getValue() === '' ? selectedCell.addMark(player) : 'Cell unavailable';
+        
+        // console.log('markCell result', result);
+        return result;
     };
 
-    // print board values in console
-    const printBoardInConsole = () => {
-        const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()))
-        console.log('printed board', boardWithCellValues);
-    };
-
-    return { getBoard, markCell, printBoardInConsole, checkStalemate };
+    return { getBoard, clearBoard, markCell, printBoardInConsole, checkStalemate };
 };
 
 // Cell - individual square on gameboard
 const Cell = () => {
     let value = '';
     const getValue = () => value;
-    const addMark = (player) => { value = player.mark };
+    const addMark = (player) => { 
+        return value ? 'unavailable' : 
+        value = player.mark;
+    };
     return { getValue, addMark };
 }
 
-// GameController - knows whos turn it is, marks cells, tracks score, and declares winner
 const GameController = (rounds, size) => {
     const playerOneName = 'Ryan';
     const playerTwoName = 'Cherry';
     const gameboard = Gameboard(size);
-    console.log('gameboard', gameboard.getBoard());
     const activeBoard = gameboard.getBoard();
+    console.log('activeBoard', activeBoard);
 
     const players = [
         {
@@ -78,17 +82,18 @@ const GameController = (rounds, size) => {
         },
     ];
     let activePlayer = players[0];
-    console.log('activePlayer.name', activePlayer.name);
 
     // switchPlayerTurn
     const switchPlayerTurn = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
+        console.log('switching player to', activePlayer);
     };
 
     // getActivePlayer
     const getActivePlayer = () => activePlayer;
+    const getActiveBoard = () => activeBoard;
     
-    const playRound = (() => {
+    const playRound = (playerOneRow, playerOneCol, playerTwoRow, playerTwoCol) => {
         let roundsRemaining = rounds;
         console.log('roundsRemaining', roundsRemaining);
 
@@ -98,42 +103,50 @@ const GameController = (rounds, size) => {
             const selectedColIndex = parseInt(prompt('Please enter a column:'));
 
             // get row / column Cells based on selection
-            const selectedRow = activeBoard[selectedRowIndex];
-            const selectedColumn = [];
+            const activeRow = activeBoard[selectedRowIndex];
+            const activeColumn = [];
             for (let row = 0; row < activeBoard.length; row++) {
-                selectedColumn.push(activeBoard[row][selectedColIndex]);
+                activeColumn.push(activeBoard[row][selectedColIndex]);
             }
 
             // if corner is selected, get diagonal as well
             let cornerSelected = false;
-            let selectedDiagonal = [];
+            let topLeftToBottomRightDiagonal = [];
+            let topRightToBottomLeftDiagonal = [];
             selectedRowIndex === 0 || selectedRowIndex === activeBoard.length - 1 ? 
             selectedColIndex === 0 || selectedColIndex === activeBoard[0].length - 1 ? (
                 console.log('corner selected'),
                 cornerSelected = true
             ) : null : null ;
 
-            if(cornerSelected) {
-                for (let i = 0; i < activeBoard.length; i++) {
-                    selectedDiagonal.push(activeBoard[i][i]);
-                }
-            };
+            for (let i = 0; i < activeBoard.length; i++) {
+                topLeftToBottomRightDiagonal.push(activeBoard[i][i]);
+            }
+
+            for (let i = 0; i < activeBoard.length; i++) {
+                topRightToBottomLeftDiagonal.push(activeBoard[i][activeBoard.length - 1 - i]);
+            }
             
             // figure out if cell is unavailable, re-do turn if so. below code does not work
-            gameboard.markCell(activePlayer, selectedRowIndex, selectedColIndex) === 'unavailable' ? null : switchPlayerTurn();
-            console.log('selectedRow', selectedRow.map(cell => cell.getValue()));
-            console.log('selectedColumn', selectedColumn.map(cell => cell.getValue()));
-            console.log('selectedDiagonal', selectedDiagonal.map(cell => cell.getValue()));
+            const activeCell = gameboard.markCell(activePlayer, selectedRowIndex, selectedColIndex);
+            // console.log('activeCell', activeCell);
+            activeCell != 'Cell unavailable' ? switchPlayerTurn() : alert('Cell unavailable. Please try again');
+
+            console.log('activeRow', activeRow.map(cell => cell.getValue()));
+            console.log('activeColumn', activeColumn.map(cell => cell.getValue()));
+            console.log('topLeftToBottomRightDiagonal', topLeftToBottomRightDiagonal.map(cell => cell.getValue()));
+            console.log('topRightToBottomLeftDiagonal', topRightToBottomLeftDiagonal.map(cell => cell.getValue()));
             
             let playerOneHasWon = false;
             let playerTwoHasWon = false;
 
-            // check win condition by row and column
-            playerOneHasWon = selectedRow.every(cell => cell.getValue() === 'X') || selectedColumn.every(cell => cell.getValue() === 'X') // || selectedDiagonal.every(cell => cell.getValue() === 'X');
-            playerTwoHasWon = selectedRow.every(cell => cell.getValue() === 'O') || selectedColumn.every(cell => cell.getValue() === 'O') // || selectedDiagonal.every(cell => cell.getValue() === 'O');
+            playerOneHasWon = activeRow.every(cell => cell.getValue() === 'X') || activeColumn.every(cell => cell.getValue() === 'X') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'X') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'X');
+            playerTwoHasWon = activeRow.every(cell => cell.getValue() === 'O') || activeColumn.every(cell => cell.getValue() === 'O') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'O') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'O');
             console.log('player one wins?', playerOneHasWon);
             console.log('player two wins?', playerTwoHasWon);
             console.log('board full / stalemate', gameboard.checkStalemate());
+
+            playerOneHasWon || playerTwoHasWon || gameboard.checkStalemate() ? gameboard.clearBoard() : null;
 
             // if winner, decrement rounds and increment score for player
             // rounds--; activePlayer.score++;
@@ -142,9 +155,42 @@ const GameController = (rounds, size) => {
             gameboard.printBoardInConsole();
         };
 
-    });
+    };
 
-    return { getActivePlayer, playRound };
-}
+    return { getActivePlayer, getActiveBoard, playRound };
+};
 
-GameController(5, 3).playRound();
+const UIController = (() => {
+    const sizeInput = document.querySelector('input#size');
+    const roundsInput = document.querySelector('input#rounds');
+    const startButton = document.querySelector('button#start');
+    const gameboardDisplay = document.querySelector('div.gameboard');
+
+    startButton.addEventListener('click', (() => {
+        // initialize GameController
+        const activeGame = GameController(parseInt(roundsInput.value), parseInt(sizeInput.value));
+        // console.log('activeGame', activeGame);
+        // console.log('activeGameBoard', activeGame.getActiveBoard());
+        // generate grid UI
+        for (let i = 0; i < sizeInput.value; i++) {
+            const gridRow = document.createElement('div.grid-row');
+            gridRow.style.display = 'flex';
+            gridRow.style.width = '100%';
+            gameboardDisplay.appendChild(gridRow);
+            for (let j = 0; j < sizeInput.value; j++) {
+                const gridCell = document.createElement('div.grid-cell');
+                gridCell.style.backgroundColor = '#d6d6d6';
+                gridCell.style.padding = '50px';
+                gridCell.style.border = '1px solid black';
+                gridCell.addEventListener('click', (() => {
+                    activeGame.
+                }));
+                gridRow.appendChild(gridCell);
+            }
+        }
+        activeGame.playRound();
+    }));
+
+    
+    
+})();

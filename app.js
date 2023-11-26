@@ -62,9 +62,7 @@ const Cell = () => {
     return { getValue, addMark };
 }
 
-const GameController = (rounds, size) => {
-    const playerOneName = 'Ryan';
-    const playerTwoName = 'Cherry';
+const GameController = (playerOneName, playerTwoName, rounds, size) => {
     const gameboard = Gameboard(size);
     const activeBoard = gameboard.getBoard();
     console.log('activeBoard', activeBoard);
@@ -95,85 +93,101 @@ const GameController = (rounds, size) => {
     
     let selectedRowIndex, selectedColIndex;
     const setCoordinates = (x, y) => {
-        [selectedRowIndex, selectedColIndex] = [x, y];
+        // selectedRowIndex, selectedColIndex = parseInt(x), parseInt(y);
+        selectedRowIndex = parseInt(x);
+        selectedColIndex = parseInt(y);
     };
     
     const playRound = () => {
         let roundsRemaining = rounds;
         console.log('roundsRemaining', roundsRemaining);
 
-        while (rounds > 0) {
             // get row / column Cells based on selection
-            console.log('selectedRowIndex', selectedRowIndex);
-            console.log('selectedColIndex', selectedColIndex);
-            const activeRow = activeBoard[selectedRowIndex];
-            const activeColumn = [];
-            for (let row = 0; row < activeBoard.length; row++) {
-                activeColumn.push(activeBoard[row][selectedColIndex]);
-            }
+        console.log('selectedRowIndex', selectedRowIndex);
+        console.log('selectedColIndex', selectedColIndex);
+        const activeRow = activeBoard[selectedRowIndex];
+        const activeColumn = [];
+        for (let row = 0; row < activeBoard.length; row++) {
+            activeColumn.push(activeBoard[row][selectedColIndex]);
+        }
 
-            // if corner is selected, get diagonal as well
-            let cornerSelected = false;
-            let topLeftToBottomRightDiagonal = [];
-            let topRightToBottomLeftDiagonal = [];
-            selectedRowIndex === 0 || selectedRowIndex === activeBoard.length - 1 ? 
-            selectedColIndex === 0 || selectedColIndex === activeBoard[0].length - 1 ? (
-                console.log('corner selected'),
-                cornerSelected = true
-            ) : null : null ;
+        // if corner is selected, get diagonal as well
+        let cornerSelected = false;
+        let topLeftToBottomRightDiagonal = [];
+        let topRightToBottomLeftDiagonal = [];
+        selectedRowIndex === 0 || selectedRowIndex === activeBoard.length - 1 ? 
+        selectedColIndex === 0 || selectedColIndex === activeBoard[0].length - 1 ? (
+            console.log('corner selected'),
+            cornerSelected = true
+        ) : null : null ;
 
-            for (let i = 0; i < activeBoard.length; i++) {
-                topLeftToBottomRightDiagonal.push(activeBoard[i][i]);
-            }
+        for (let i = 0; i < activeBoard.length; i++) {
+            topLeftToBottomRightDiagonal.push(activeBoard[i][i]);
+        }
 
-            for (let i = 0; i < activeBoard.length; i++) {
-                topRightToBottomLeftDiagonal.push(activeBoard[i][activeBoard.length - 1 - i]);
-            }
-            
-            // figure out if cell is unavailable, re-do turn if so. below code does not work
-            const activeCell = gameboard.markCell(activePlayer, selectedRowIndex, selectedColIndex);
-            console.log('activeCell', activeCell);
-            activeCell != 'Cell unavailable' ? switchPlayerTurn() : alert('Cell unavailable. Please try again');
+        for (let i = 0; i < activeBoard.length; i++) {
+            topRightToBottomLeftDiagonal.push(activeBoard[i][activeBoard.length - 1 - i]);
+        }
+        
+        // figure out if cell is unavailable, re-do turn if so. below code does not work
+        const activeCell = gameboard.markCell(activePlayer, selectedRowIndex, selectedColIndex);
+        console.log('activeCell', activeCell);
+        activeCell != 'Cell unavailable' ? switchPlayerTurn() : alert('Cell unavailable. Please try again');
 
-            console.log('activeRow', activeRow.map(cell => cell.getValue()));
-            console.log('activeColumn', activeColumn.map(cell => cell.getValue()));
-            console.log('topLeftToBottomRightDiagonal', topLeftToBottomRightDiagonal.map(cell => cell.getValue()));
-            console.log('topRightToBottomLeftDiagonal', topRightToBottomLeftDiagonal.map(cell => cell.getValue()));
-            
-            let playerOneHasWon = false;
-            let playerTwoHasWon = false;
+        console.log('activeRow', activeRow.map(cell => cell.getValue()));
+        console.log('activeColumn', activeColumn.map(cell => cell.getValue()));
+        console.log('topLeftToBottomRightDiagonal', topLeftToBottomRightDiagonal.map(cell => cell.getValue()));
+        console.log('topRightToBottomLeftDiagonal', topRightToBottomLeftDiagonal.map(cell => cell.getValue()));
+        
+        let playerOneHasWon = false;
+        let playerTwoHasWon = false;
 
-            playerOneHasWon = activeRow.every(cell => cell.getValue() === 'X') || activeColumn.every(cell => cell.getValue() === 'X') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'X') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'X');
-            playerTwoHasWon = activeRow.every(cell => cell.getValue() === 'O') || activeColumn.every(cell => cell.getValue() === 'O') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'O') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'O');
-            console.log('player one wins?', playerOneHasWon);
-            console.log('player two wins?', playerTwoHasWon);
-            console.log('board full / stalemate', gameboard.checkStalemate());
+        playerOneHasWon = activeRow.every(cell => cell.getValue() === 'X') || activeColumn.every(cell => cell.getValue() === 'X') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'X') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'X');
+        playerTwoHasWon = activeRow.every(cell => cell.getValue() === 'O') || activeColumn.every(cell => cell.getValue() === 'O') || topLeftToBottomRightDiagonal.every(cell => cell.getValue() === 'O') || topRightToBottomLeftDiagonal.every(cell => cell.getValue() === 'O');
+        console.log('player one wins?', playerOneHasWon);
+        console.log('player two wins?', playerTwoHasWon);
+        const stalemate = gameboard.checkStalemate();
+        console.log('stalemate', stalemate);
 
-            playerOneHasWon || playerTwoHasWon || gameboard.checkStalemate() ? gameboard.clearBoard() : null;
+        playerOneHasWon || playerTwoHasWon || stalemate ? gameboard.clearBoard() : null;
 
-            // if winner, decrement rounds and increment score for player
-            // rounds--; activePlayer.score++;
+        // if winner, decrement rounds and increment score for player
+        // rounds--; activePlayer.score++;
 
-            console.log('new activePlayer', activePlayer);
-            gameboard.printBoardInConsole();
-        };
-
+        console.log('new activePlayer', activePlayer);
+        gameboard.printBoardInConsole();
+        return { playerOneHasWon, playerTwoHasWon, stalemate };
     };
-
+        
     return { getActivePlayer, setCoordinates, getActiveBoard, playRound };
 };
 
 const UIController = (() => {
     const sizeInput = document.querySelector('input#size');
+    const playerOneName = document.querySelector('input#p1');
+    const playerTwoName = document.querySelector('input#p2');
     const roundsInput = document.querySelector('input#rounds');
     const startButton = document.querySelector('button#start');
+    const resetButton = document.querySelector('button#reset');
     const gameboardDisplay = document.querySelector('div.gameboard');
+
+    const resetGame = () => {
+        while (gameboardDisplay.childElementCount > 0) {
+            console.log('gameboardDisplay.childElementCount', gameboardDisplay.childElementCount);
+            console.log('gameboardDisplay.childNodes', gameboardDisplay.childNodes);
+            gameboardDisplay.childNodes.forEach((node) => {
+                gameboardDisplay.removeChild(node);
+            });
+        }
+    };
 
     startButton.addEventListener('click', (() => {
         // initialize GameController
-        const activeGame = GameController(parseInt(roundsInput.value), parseInt(sizeInput.value));
+        const activeGame = GameController(playerOneName, playerTwoName, parseInt(roundsInput.value), parseInt(sizeInput.value));
+        console.log('activeGame', activeGame);
         // console.log('activeRound', activeRound);
         // console.log('activeGameBoard', activeGame.getActiveBoard());
+
         // generate grid UI
         for (let i = 0; i < sizeInput.value; i++) {
             const gridRow = document.createElement('div.grid-row');
@@ -192,13 +206,23 @@ const UIController = (() => {
                     console.log("gridCell.dataset.xIndex", gridCell.dataset.xIndex);
                     console.log("gridCell.dataset.yIndex", gridCell.dataset.yIndex);
                     // activeGame.setCoordinates(gridCell.dataset.xIndex, gridCell.dataset.yIndex);
+                    activeGame.setCoordinates(gridCell.dataset.xIndex, gridCell.dataset.yIndex);
+                    gridCell.textContent = activeGame.getActivePlayer().mark;
+
                     const result = activeGame.playRound();
                     console.log(result);
+                    result.playerOneHasWon ? (
+                        alert(`${playerOneName.value} wins!`), resetGame()
+                     ) : result.playerTwoHasWon ? (
+                        alert(`${playerTwoName.value} wins!`), resetGame() 
+                    ) : result.stalemate ? alert('It\'s a tie!') : null;
                 }));
                 gridRow.appendChild(gridCell);
             }
         }
     }));
+
+    resetButton.addEventListener('click', resetGame);
 
     
     

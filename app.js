@@ -93,16 +93,19 @@ const GameController = (rounds, size) => {
     const getActivePlayer = () => activePlayer;
     const getActiveBoard = () => activeBoard;
     
-    const playRound = (playerOneRow, playerOneCol, playerTwoRow, playerTwoCol) => {
+    let selectedRowIndex, selectedColIndex;
+    const setCoordinates = (x, y) => {
+        [selectedRowIndex, selectedColIndex] = [x, y];
+    };
+    
+    const playRound = () => {
         let roundsRemaining = rounds;
         console.log('roundsRemaining', roundsRemaining);
 
         while (rounds > 0) {
-            alert(`Starting round! Player: ${activePlayer.name}`);
-            const selectedRowIndex = parseInt(prompt('Please enter a row:'));
-            const selectedColIndex = parseInt(prompt('Please enter a column:'));
-
             // get row / column Cells based on selection
+            console.log('selectedRowIndex', selectedRowIndex);
+            console.log('selectedColIndex', selectedColIndex);
             const activeRow = activeBoard[selectedRowIndex];
             const activeColumn = [];
             for (let row = 0; row < activeBoard.length; row++) {
@@ -129,7 +132,7 @@ const GameController = (rounds, size) => {
             
             // figure out if cell is unavailable, re-do turn if so. below code does not work
             const activeCell = gameboard.markCell(activePlayer, selectedRowIndex, selectedColIndex);
-            // console.log('activeCell', activeCell);
+            console.log('activeCell', activeCell);
             activeCell != 'Cell unavailable' ? switchPlayerTurn() : alert('Cell unavailable. Please try again');
 
             console.log('activeRow', activeRow.map(cell => cell.getValue()));
@@ -157,7 +160,7 @@ const GameController = (rounds, size) => {
 
     };
 
-    return { getActivePlayer, getActiveBoard, playRound };
+    return { getActivePlayer, setCoordinates, getActiveBoard, playRound };
 };
 
 const UIController = (() => {
@@ -169,26 +172,32 @@ const UIController = (() => {
     startButton.addEventListener('click', (() => {
         // initialize GameController
         const activeGame = GameController(parseInt(roundsInput.value), parseInt(sizeInput.value));
-        // console.log('activeGame', activeGame);
+        // console.log('activeRound', activeRound);
         // console.log('activeGameBoard', activeGame.getActiveBoard());
         // generate grid UI
         for (let i = 0; i < sizeInput.value; i++) {
             const gridRow = document.createElement('div.grid-row');
             gridRow.style.display = 'flex';
             gridRow.style.width = '100%';
+            gridRow.dataset.index = i;
             gameboardDisplay.appendChild(gridRow);
             for (let j = 0; j < sizeInput.value; j++) {
                 const gridCell = document.createElement('div.grid-cell');
                 gridCell.style.backgroundColor = '#d6d6d6';
                 gridCell.style.padding = '50px';
                 gridCell.style.border = '1px solid black';
+                gridCell.dataset.xIndex = i;
+                gridCell.dataset.yIndex = j;
                 gridCell.addEventListener('click', (() => {
-                    activeGame.
+                    console.log("gridCell.dataset.xIndex", gridCell.dataset.xIndex);
+                    console.log("gridCell.dataset.yIndex", gridCell.dataset.yIndex);
+                    // activeGame.setCoordinates(gridCell.dataset.xIndex, gridCell.dataset.yIndex);
+                    const result = activeGame.playRound();
+                    console.log(result);
                 }));
                 gridRow.appendChild(gridCell);
             }
         }
-        activeGame.playRound();
     }));
 
     
